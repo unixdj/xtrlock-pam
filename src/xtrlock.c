@@ -120,7 +120,7 @@ create_cursors(void)
     Pixmap csr_source,csr_mask;
     XColor dummy, def_bg, def_fg, bg, fg;
     int i;
-    
+
     csr_source = XCreateBitmapFromData(display, root, lock_bits,
         lock_width, lock_height);
     csr_mask = XCreateBitmapFromData(display, root, mask_bits, mask_width,
@@ -131,7 +131,7 @@ create_cursors(void)
         err("Can't allocate basic colors: black, white\n");
         exit(1);
     }
-     
+ 
     for (i = 0; i < AUTH_MAX; i++) {
         if (!XAllocNamedColor(display, cmap, cursors[i].fg, &dummy, &fg))
             fg = def_fg;
@@ -148,7 +148,7 @@ lock(int mode)
     XEvent ev;
     KeySym ks;
     char cbuf[10], rbuf[128];
-    int clen, rlen=0, state = AUTH_NONE, old_state = -1;
+    int clen, rlen=0, state = AUTH_NONE, old_state = -1, i;
     long goodwill= INITIALGOODWILL, timeout= 0;
     Window window;
 
@@ -167,12 +167,17 @@ lock(int mode)
     XMapWindow(display,window);
     XRaiseWindow(display,window);
     XSync(display, False);
-    if (XGrabKeyboard(display, window, False, GrabModeAsync, GrabModeAsync,
-            CurrentTime) != GrabSuccess) {
+    for (i = 1000; i; i--) {
+        if (XGrabKeyboard(display, window, False, GrabModeAsync, GrabModeAsync,
+                CurrentTime) == GrabSuccess)
+            break;
+        usleep(1000);
+    }
+    if (!i) {
         err("can't grab keyboard\n");
         exit(1);
     }
-  
+
     for (;;) {
         if (rlen)
             state = AUTH_NOW;
