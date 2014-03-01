@@ -131,7 +131,7 @@ create_cursors(void)
         err("Can't allocate basic colors: black, white\n");
         exit(1);
     }
- 
+
     for (i = 0; i < AUTH_MAX; i++) {
         if (!XAllocNamedColor(display, cmap, cursors[i].fg, &dummy, &fg))
             fg = def_fg;
@@ -148,7 +148,7 @@ lock(int mode)
     XEvent ev;
     KeySym ks;
     char cbuf[10], rbuf[128];
-    int clen, rlen=0, state = AUTH_NONE, old_state = -1, i;
+    int clen, rlen=0, state = AUTH_NONE, old_state = AUTH_NONE, i;
     long goodwill= INITIALGOODWILL, timeout= 0;
     Window window;
 
@@ -167,6 +167,7 @@ lock(int mode)
     XMapWindow(display,window);
     XRaiseWindow(display,window);
     XSync(display, False);
+
     for (i = 1000; i; i--) {
         if (XGrabKeyboard(display, window, False, GrabModeAsync, GrabModeAsync,
                 CurrentTime) == GrabSuccess)
@@ -175,6 +176,17 @@ lock(int mode)
     }
     if (!i) {
         err("can't grab keyboard\n");
+        exit(1);
+    }
+    for (i = 1000; i; i--) {
+        if (XGrabPointer(display, window, False,
+                0, GrabModeAsync, GrabModeAsync, None,
+                cursors[AUTH_NONE].c, CurrentTime) == GrabSuccess)
+            break;
+        usleep(1000);
+    }
+    if (!i) {
+        err("can't grab pointer\n");
         exit(1);
     }
 
@@ -214,7 +226,7 @@ lock(int mode)
                     0, GrabModeAsync, GrabModeAsync, None,
                     cursors[AUTH_FAILED].c, CurrentTime);
                 if (passwordok(rbuf))
-                    exit(0);
+                    return;
                 XBell(display,0);
                 rlen= 0;
                 if (timeout) {
