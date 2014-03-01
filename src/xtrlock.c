@@ -249,8 +249,10 @@ lock(int mode)
                 break;
             }
             break;
+        case MapNotify:
+            XRaiseWindow(display, window);
+            break;
         default:
-            XRaiseWindow(display,window);
             break;
         }
     }
