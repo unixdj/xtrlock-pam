@@ -164,8 +164,8 @@ lock(int mode)
 
     XSelectInput(display,window,KeyPressMask|KeyReleaseMask);
     create_cursors();
-    XMapWindow(display,window);
-    XRaiseWindow(display,window);
+    XMapRaised(display, window);
+    XSelectInput(display, root, SubstructureNotifyMask);
     XSync(display, False);
 
     for (i = 1000; i; i--) {
@@ -250,6 +250,7 @@ lock(int mode)
             }
             break;
         default:
+            XRaiseWindow(display,window);
             break;
         }
     }
